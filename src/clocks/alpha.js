@@ -125,4 +125,10 @@ function init() {
     window.requestAnimationFrame(loop);
 };
 
-window.addEventListener('load', init);
+const Alpha = {
+    run: function() {
+        window.addEventListener('load', init);
+    }
+};
+
+export default Alpha;

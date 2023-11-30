@@ -1,0 +1,12 @@
+services:
+  frontend:
+    image: dev/quadclock
+    build:
+      context: .
+      target: development
+      args:
+        DOCKER_BUILDKIT: 1
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8080:8080"
