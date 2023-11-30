@@ -1,0 +1,12 @@
+#clock {
+    position: absolute;
+}
+
+#title {
+    text-align: center;
+}
+
+#container {
+    position: absolute;
+    width: 100%;
+}
