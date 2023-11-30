@@ -42,7 +42,7 @@ function init() {
 
         r = Math.min(height, width)*0.40;
         ctx.font = `${r*.25}px monospace`;
-        ctx.textBaseline = 'hanging';
+        ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
     };
 
@@ -105,7 +105,7 @@ function init() {
 
         // draw the hour digit
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`${getHour(date)}`, width*.5, height*.5-0.075*r);
+        ctx.fillText(`${getHour(date)}`, width/2, height/2);
 
         // update the title with the normal time
         const sH = date.getHours()%12;
