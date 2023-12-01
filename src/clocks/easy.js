@@ -101,34 +101,59 @@ function init() {
         });
     }
 
+    function drawQuadMask(date) {
+        const L = 15;
+        const k = 100;
+        let x0, offset;
+
+        const x = getMinutes(date);
+        if (x >= 0 && x < 15) {
+            x0 = 7.5;
+            offset = 0;
+        } else if (x >= 15 && x < 30) {
+            x0 = 22.5;
+            offset = 15;
+        } else if (x >= 30 && x < 45) {
+            x0 = 37.5;
+            offset = 30;
+        } else if (x >= 45 && x < 60) {
+            x0 = 52.5;
+            offset = 45;
+        }
+
+        const mCenter = L / (1 + Math.exp(-k*(x-x0))) + offset;
+        const theta = -(PI2 * mCenter/60);
+
+        angledDraw(ctx, -theta - Math.PI/2, (ctx) => {
+            ctx.beginPath();
+            ctx.arc(0, 0, 0.5*r, PI2*(1/8+1/240), PI2*(7/8 - 1/240), false);
+            ctx.lineWidth = r*0.3;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+        });
+    }
+
     function drawQuadMarks(date) {
-        // draw the quarter hand
-        const qi = getQuarterHand(date);
-        const theta = PI2 * (qi)/4;
+        // use angled Draw with theta=0 to preserve orientation
+        angledDraw(ctx, 0, (ctx) => {
+            ctx.fillStyle = "white";
+            for (let i=0; i<60; ++i) {
 
-        ctx.fillStyle = "white";
-        angledDraw(ctx, theta, (ctx) => {
-            const increment = PI2 / 60;
-            ctx.rotate(-7*increment);
-
-            for (let i=-7; i<=7; ++i) {
-                if (i == 0) {
+                ctx.beginPath();
+                if (i%15 == 0) {
                     // draw the major hand
                     ctx.fillRect(-.0075*r, -0.375*r, .015*r, -0.25*r);
-                } else if (i == 5 || i == -5) {
+                } else if (i%5 == 0) {
                     // draw the major marks
-                    ctx.beginPath();
                     ctx.fillRect(-.008*r, -0.45*r, .016*r, -0.1*r);
-                    //ctx.arc(0, -0.5*r, 0.025*r, 0, PI2, false);
-                    ctx.fill();
                 } else {
                     // draw the minor marks
-                    ctx.beginPath();
                     ctx.arc(0, -0.5*r, 0.01*r, 0, PI2, false);
                     ctx.fill();
                 }
 
-                ctx.rotate(increment);
+                // draw each tic with one minute spacing
+                ctx.rotate(PI2 / 60);
             }
         });
     }
@@ -139,14 +164,17 @@ function init() {
         // Draw the background
         drawFace();
 
+        // Draw the quad marks
+        drawQuadMarks(date);
+
+        // Draw the quad mask
+        drawQuadMask(date);
+
         // Draw the seconds blip
         drawSecondsBlip(date);
 
         // Draw the Hour
         drawHourDigit(date);
-
-        // Draw the quad marks
-        drawQuadMarks(date);
 
         // Draw the minute hand
         drawMinuteHand(date);
