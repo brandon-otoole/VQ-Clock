@@ -2,18 +2,47 @@
 
 const PI2 = Math.PI*2;
 
-function getSeconds(now) {
-    return now.getSeconds() + now.getMilliseconds()/1000;
+function getSecond(now) {
+    const s = now.getSeconds() + now.getMilliseconds()/1000;
+
+    const dt = 4;
+    return Math.round(s*dt)/dt;
 }
 
-function getMinutes(now) {
-    return now.getMinutes() + getSeconds(now)/60;
+function getMinute(now) {
+    const m =  now.getMinutes() + now.getSeconds()/60;
+
+    const dt = 15;
+    return Math.round(m*dt)/dt;
 }
 
-function getQuarterHand(now) {
-    const m = now.getMinutes() + now.getSeconds()/60;
+function getQuad(now) {
+    const L = 15;
+    const k = 100;
+    let x0, offset;
 
-    return Math.round(m/15);
+    const milliseconds = now.getMilliseconds();
+    const seconds = now.getSeconds() + milliseconds / 1000;
+    const x = now.getMinutes() + seconds/60;
+    if (x >= 0 && x < 15) {
+        x0 = 7.5;
+        offset = 0;
+    } else if (x >= 15 && x < 30) {
+        x0 = 22.5;
+        offset = 15;
+    } else if (x >= 30 && x < 45) {
+        x0 = 37.5;
+        offset = 30;
+    } else if (x >= 45 && x < 60) {
+        x0 = 52.5;
+        offset = 45;
+    }
+
+    const mCenter = L / (1 + Math.exp(-k*(x-x0))) + offset;
+    const theta = (PI2 * mCenter/60) - PI2/4;
+
+    const dt = 1000000;
+    return Math.round(theta*dt)/dt;
 }
 
 function getHour(now) {
@@ -26,12 +55,12 @@ function getHour(now) {
     }
 }
 
-function getQuarterMod(now) {
-    const ms = now.getMilliseconds();
-    const s = now.getSeconds() + ms / 1000;
-    const m = now.getMinutes() + s / 60;
-
-    return m - 15*getQuarterHand(now);
+function angledDraw(ctx, x, y, theta, actions) {
+    ctx.save()
+    ctx.translate(x, y);
+    ctx.rotate(theta);
+    actions(ctx);
+    ctx.restore();
 }
 
 function init() {
@@ -39,25 +68,51 @@ function init() {
     const ctx = canvas.getContext('2d');
 
     let width, height, r;
-
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-
     const resize = () => {
+        hourOld =  quadOld = minuteOld = secondOld = undefined;
+
         canvas.width = width = window.innerWidth;
         canvas.height = height = window.innerHeight;
 
         r = Math.min(height, width)*0.40;
 
         ctx.font = `${r*.25}px monospace`;
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+
+        // Draw the background
+        drawFace();
     };
 
-    function angledDraw(ctx, angle, actions) {
-        ctx.save()
-        ctx.translate(width/2, height/2);
-        ctx.rotate(angle);
-        actions(ctx);
-        ctx.restore();
+    function clearHour(hour) {
+        const theta = 0;
+        angledDraw(ctx, width/2, height/2, theta, (ctx) => {
+            ctx.beginPath();
+            ctx.arc(0, 0, r*.25, 0, PI2, false);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        });
+    }
+
+    function clearMinute(minute) {
+        angledDraw(ctx, width/2, height/2, 0, (ctx) => {
+            ctx.beginPath();
+            ctx.arc(0, 0, 0.45*r, 0, PI2, false);
+            ctx.lineWidth = r*0.4;
+            ctx.strokeStyle = "black";
+            ctx.stroke();
+        });
+    }
+
+    function clearSecond(second) {
+        const theta = Math.PI * (second)/30.0;
+
+        angledDraw(ctx, width/2, height/2, theta, (ctx) => {
+            ctx.beginPath();
+            ctx.arc(0, -0.975*r, r*.025, 0, PI2, false);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        });
     }
 
     function drawFace() {
@@ -73,10 +128,10 @@ function init() {
     }
 
     // draw the seconds blip
-    function drawSecondsBlip(date) {
-        const theta = Math.PI * (getSeconds(date))/30.0;
+    function drawSecondsBlip(second) {
+        const theta = Math.PI * (second)/30.0;
 
-        angledDraw(ctx, theta, (ctx) => {
+        angledDraw(ctx, width/2, height/2, theta, (ctx) => {
             ctx.beginPath();
             ctx.arc(0, -0.975*r, r*.0125, 0, PI2, false);
             ctx.fillStyle = "darkgrey";
@@ -85,45 +140,23 @@ function init() {
     }
 
     // draw the hour digit
-    function drawHourDigit(date) {
+    function drawHourDigit(hour) {
         ctx.fillStyle = 'white';
-        ctx.fillText(`${getHour(date)}`, width/2, height/2);
+        ctx.fillText(`${hour}`, width/2, height/2);
     }
 
-    function drawMinuteHand(date) {
-        const theta = Math.PI * (getMinutes(date))/30.0;
+    function drawMinuteHand(minute) {
+        const theta = Math.PI * (minute)/30.0;
 
-        angledDraw(ctx, theta, (ctx) => {
+        angledDraw(ctx, width/2, height/2, theta, (ctx) => {
             ctx.beginPath();
             ctx.fillStyle = "green";
             ctx.fillRect(-.007*r, -0.45*r, .014*r, -0.1*r);
         });
     }
 
-    function drawQuadMask(date) {
-        const L = 15;
-        const k = 100;
-        let x0, offset;
-
-        const x = getMinutes(date);
-        if (x >= 0 && x < 15) {
-            x0 = 7.5;
-            offset = 0;
-        } else if (x >= 15 && x < 30) {
-            x0 = 22.5;
-            offset = 15;
-        } else if (x >= 30 && x < 45) {
-            x0 = 37.5;
-            offset = 30;
-        } else if (x >= 45 && x < 60) {
-            x0 = 52.5;
-            offset = 45;
-        }
-
-        const mCenter = L / (1 + Math.exp(-k*(x-x0))) + offset;
-        const theta = -(PI2 * mCenter/60);
-
-        angledDraw(ctx, -theta - Math.PI/2, (ctx) => {
+    function drawQuadMask(theta) {
+        angledDraw(ctx, width/2, height/2, theta, (ctx) => {
             ctx.beginPath();
             ctx.arc(0, 0, 0.45*r, PI2*(1/8+1/240), PI2*(7/8 - 1/240), false);
             ctx.lineWidth = r*0.4;
@@ -132,9 +165,9 @@ function init() {
         });
     }
 
-    function drawQuadMarks(date) {
+    function drawQuadMarks() {
         // use angled Draw with theta=0 to preserve orientation
-        angledDraw(ctx, 0, (ctx) => {
+        angledDraw(ctx, width/2, height/2, 0, (ctx) => {
             ctx.fillStyle = "white";
             for (let i=0; i<60; ++i) {
 
@@ -157,26 +190,51 @@ function init() {
         });
     }
 
+    let hourOld, quadOld, minuteOld, secondOld;
     const loop = (t) => {
-        const date = new Date();
+        //const date = new Date();
 
-        // Draw the background
-        drawFace();
+        const dm = 0;
+        const date = new Date((new Date()).getTime() + dm*60000);
 
-        // Draw the quad marks
-        drawQuadMarks(date);
+        const hour = getHour(date);
+        const quadAngle = getQuad(date);
+        const minute = getMinute(date);
+        const second = getSecond(date);
 
-        // Draw the quad mask
-        drawQuadMask(date);
+        // Draw the Hour if it has changed
+        if (hourOld != hour) {
+            clearHour(hourOld);
 
-        // Draw the seconds blip
-        drawSecondsBlip(date);
+            drawHourDigit(hour);
 
-        // Draw the Hour
-        drawHourDigit(date);
+            hourOld = hour;
+        }
 
         // Draw the minute hand
-        drawMinuteHand(date);
+        if (minuteOld != minute || quadOld != quadAngle) {
+            clearMinute(minuteOld);
+
+            // Draw the quad marks
+            drawQuadMarks();
+
+            // Draw the quad mask
+            drawQuadMask(quadAngle);
+
+            drawMinuteHand(minute);
+
+            minuteOld = minute;
+            quadOld = quadAngle
+        }
+
+        // Draw the seconds blip
+        if (secondOld != second) {
+            clearSecond(secondOld);
+
+            drawSecondsBlip(second);
+
+            secondOld = second;
+        }
 
         // update the title with the normal time
         const sH = date.getHours()%12;
@@ -184,7 +242,7 @@ function init() {
         const sS = date.getSeconds().toString().padStart(2, '0');
         const normalTime = `${sH}:${sM}:${sS}`;
 
-        document.getElementById('title').innerHTML = `Easy Mode - ${normalTime}`;
+        //document.getElementById('title').innerHTML = `Easy Mode - ${normalTime}`;
 
         window.requestAnimationFrame(loop);
     };
