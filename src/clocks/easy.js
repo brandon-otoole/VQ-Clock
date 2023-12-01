@@ -125,8 +125,8 @@ function init() {
 
         angledDraw(ctx, -theta - Math.PI/2, (ctx) => {
             ctx.beginPath();
-            ctx.arc(0, 0, 0.5*r, PI2*(1/8+1/240), PI2*(7/8 - 1/240), false);
-            ctx.lineWidth = r*0.3;
+            ctx.arc(0, 0, 0.45*r, PI2*(1/8+1/240), PI2*(7/8 - 1/240), false);
+            ctx.lineWidth = r*0.4;
             ctx.strokeStyle = "black";
             ctx.stroke();
         });
