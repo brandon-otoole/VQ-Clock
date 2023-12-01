@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: dev/quadclock
+    image: dev/vq-clock
     build:
       context: .
       target: development
