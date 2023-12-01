@@ -78,11 +78,10 @@ function init() {
 
         angledDraw(ctx, theta, (ctx) => {
             ctx.beginPath();
-            ctx.arc(0, -0.95*r, r*.025, 0, PI2, false);
-            ctx.fillStyle = "red";
+            ctx.arc(0, -0.975*r, r*.0125, 0, PI2, false);
+            ctx.fillStyle = "darkgrey";
             ctx.fill();
         });
-
     }
 
     // draw the hour digit
