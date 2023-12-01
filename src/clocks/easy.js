@@ -38,7 +38,10 @@ function init() {
     const canvas = document.getElementsByTagName('canvas').item(0)
     const ctx = canvas.getContext('2d');
 
-    let width, height, r, spacing;
+    let width, height, r;
+
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
 
     const resize = () => {
         canvas.width = width = window.innerWidth;
@@ -46,10 +49,7 @@ function init() {
 
         r = Math.min(height, width)*0.40;
 
-        spacing = r*0.1;
         ctx.font = `${r*.25}px monospace`;
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'center';
     };
 
     function angledDraw(ctx, angle, actions) {
